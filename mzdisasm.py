@@ -44,6 +44,14 @@ class Command(cmd.Cmd):
         self.state.goto(address)
         print(self.state.show())
 
+    def do_find(self, arg):
+        try:
+            arg = binascii.unhexlify(arg)
+        except:
+            print('Illegal argument %r' % arg)
+            return
+        self.state.find(arg)
+        print(self.state.show())
 
     def do_show(self, arg):
         '''show [!]lines
@@ -139,6 +147,16 @@ class State(object):
                             binascii.hexlify(instr.bytes).decode('ascii'),
                             instr.mnemonic, instr.op_str))
             self.lines = iter(lines())
+
+    def find(self, arg):
+        def lines():
+            pos = -1
+            while True:
+                pos = self.data.find(arg, pos+1)
+                if pos < 0:
+                    return
+                yield '   0x%06X: %s' % (pos, ' '.join('%02X' % c for c in self.data[pos:pos+8]))
+        self.lines = iter(lines())
 
 
     def save(self):
